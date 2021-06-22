@@ -1,0 +1,6 @@
+[submodule "deep-person-reid"]
+	path = deep-person-reid
+	url = https://github.com/KaiyangZhou/deep-person-reid
+[submodule "scs-python"]
+	path = scs-python
+	url = https://github.com/bodono/scs-python

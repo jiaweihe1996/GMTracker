@@ -1,0 +1,39 @@
+language: python
+python:
+- 3.5
+
+install:
+- sudo apt-get update
+- sudo apt-get install -qq git
+- if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
+  -O miniconda.sh; else wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+  -O miniconda.sh; fi
+- bash miniconda.sh -b -p $HOME/miniconda
+- export PATH="$HOME/miniconda/bin:$PATH"
+- hash -r
+- conda config --set always_yes yes --set changeps1 no
+- conda update -q conda
+- conda info -a
+- conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION
+- source activate test-environment
+- conda install pytorch torchvision -c pytorch
+- conda install cvxpy -c cvxgrp
+- conda install numpy scipy nose pip setuptools
+- pip install numdifftools block
+- python setup.py install
+
+script:
+- nosetests -v -d test.py
+
+deploy:
+  provider: pypi
+  user: bamos
+  password:
+    secure: "PjK85/YPVNE5rICzTrqZ42h69AFWN6Z87ej6Rf74MFM0QJ4gNz9pgomUZSzdDrHfh3aTIIbaQlkBGi0GxlKEo975f1mKCGKPUc8sIF2q8sEdWBxt30jboBUdvGRl5txYPff96zMilrXBfv7j2ZS1iB0X9C0cMcZs0o71S/xA1cRcMyaxQsa8o9U2ALL2yzJB6VlArXSBQlOsWY1tQu8seWSkYHYyWdNkbsJ0mFdzY77wIdZgoI5BiG3fDZA/JWSh279/xa6O/kuNGjvKr1X4wTizvFnioFhvbYuJeRFtfTDuYjLSpXK8ZURyBwhgDcBRauSbAxXeJlP3my0Kuo+mAT76OHcMW/3mXElsVPhPbIX/jKxt7/jbXz8n913wpaEFIbFRZGnN3fhQry/e14ESIh6ZkMgSYlX/iOoePSqfNTz4RApsx+LcfdGBrQq5LM/4KyWp/3uijmrwabo1hxZ5VqEvazO8UFpKwRmYmTazedUixHuvWTKUpzqYRT1l2GJ8Cr3O8S7RN5gCrFUdmYxtJZMhbDvOUlB4kVp244ZPFEe2qHpoxm8BwrBO5Q6l0OeXZJpqdS99uo0Nt4qNQAOWb8xC9YJrZQwelJw0Q5UGv7Vjk6D9dK/GlHmI72lUzbtuYiIYlyoVy/00Q8QW/f3C40VBasW3a123k4i97C70qlg="
+  on:
+    distributions: sdist bdist_wheel
+    repo: locuslab/qpth
+    tags: true
+
+matrix:
+  fast_finish: true
