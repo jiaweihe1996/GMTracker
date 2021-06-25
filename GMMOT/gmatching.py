@@ -6,7 +6,7 @@ import torch
 import torch.nn.functional as F
 from utils.config import cfg
 from GMMOT.graph_encoder import ReidEncoder
-
+from utils.reranking import re_ranking
 class GraphNet(nn.Module):
     def __init__(self):
         super(GraphNet, self).__init__()
@@ -38,13 +38,17 @@ class GraphNet(nn.Module):
         emb2_new = F.normalize(emb2_new.squeeze(0), p=2, dim=1).unsqueeze(0)
        
         # calculate the vertex-vertex similarity and edge-edge similarity
-        Mp = torch.matmul(emb1_new, emb2_new.transpose(1, 2)).squeeze(0)
+        Mp_before = torch.matmul(emb1_new, emb2_new.transpose(1, 2)).squeeze(0)
+        # reranking
+        Mp = torch.Tensor(1.0 - re_ranking(Mp_before,emb1_new.squeeze(0)@emb1_new.squeeze(0).t(),emb2_new.squeeze(0)@emb2_new.squeeze(0).t(), k1=1, k2=1))
+
+
         Mpp = Mp.transpose(0, 1).reshape(Mp.shape[0]*Mp.shape[1]).unsqueeze(0).t()
         if Mp.shape[0]==1 and Mp.shape[1]==1:
             thr_flag = torch.Tensor(Mp.shape[0],Mp.shape[1]).zero_()
             for i in range(Mp.shape[0]):
                 for j in range(Mp.shape[1]):
-                    if kf_gate[i][j] == -1 or iou[i][j]==0 or Mp[i][j]<reid_thr:
+                    if kf_gate[i][j] == -1 or iou[i][j]==0 or Mp_before[i][j]<reid_thr:
                         thr_flag[i][j] = 1
             return np.array([0,0]),thr_flag
 
@@ -109,7 +113,7 @@ class GraphNet(nn.Module):
         thr_flag = torch.Tensor(Mp.shape[0],Mp.shape[1]).zero_()
         for i in range(Mp.shape[0]):
             for j in range(Mp.shape[1]):
-                if kf_gate[i][j] == -1 or iou[i][j]==0 or Mp[i][j]<reid_thr:
+                if kf_gate[i][j] == -1 or iou[i][j]==0 or Mp_before[i][j]<reid_thr:
                     thr_flag[i][j] = 1
 
         # greedy matching from matching score map
