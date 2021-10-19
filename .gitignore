@@ -138,6 +138,5 @@ data/
 .vscode/
 result*/
 npy*
-data*
 a.py
 .gitbackup
