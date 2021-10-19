@@ -5,8 +5,6 @@
 This repository is the official PyTorch implementation of the CVPR 2021 paper: *Learnable Graph Matching: Incorporating Graph Partitioning with Deep Feature Learning for Multiple Object Tracking*.   
 [[arXiv](https://arxiv.org/abs/2103.16178)] [[CVF open access](https://openaccess.thecvf.com/content/CVPR2021/html/He_Learnable_Graph_Matching_Incorporating_Graph_Partitioning_With_Deep_Feature_Learning_CVPR_2021_paper.html)]
 
-- **Training and pre-processing code will be released in next few days.**
-
 ![Method Visualization](vis/pipeline.jpg)
 
 ## Getting Started
@@ -19,6 +17,7 @@ git clone --recursive https://github.com/jiaweihe1996/GMTracker
 - Python == 3.6.X
 - PyTorch >= 1.4 with CUDA >=10.0 (tested on PyTorch 1.4.0)
 - torchvision 
+- torch_geometric
 
 ```setup
 pip install -r requirements.txt
@@ -43,7 +42,7 @@ python setup.py install --scs --gpu
 4. Extract inital ReID features:
 
 - **(Preference)** For convenience, we provide the preprocessed detection appearance features, which are stored in `npy` files. You can download them from [GoogleDrive](https://drive.google.com/file/d/1POVU2mWBet6QVX-hOoexeecNU0KrNl6c/view?usp=sharing) or [BaiduPan](https://pan.baidu.com/s/1SOL1hAIrSzYBRsyMYKyOIw) (code: dyvk) and unzip it.
-- Or get refined detections and extract inital ReID features from the ReID model (Will be released later).
+- Or get refined detections and extract inital ReID features from the ReID model.
 
 
 5. Run GMTracker on a sequence:
@@ -96,6 +95,10 @@ python cross_validation.py
 - and run:
 ```
 python -m motmetrics.apps.eval_motchallenge ./MOT17/val ./result/val
+```
+10. Training:
+```
+python trainGMMOT.py
 ```
 ## Acknowledgement
 
