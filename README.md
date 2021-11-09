@@ -98,7 +98,7 @@ python -m motmetrics.apps.eval_motchallenge ./MOT17/val ./result/val
 ```
 10. Training:
 
-    Please download gt.npy from [here](https://drive.google.com/file/d/18T-qNvR_YGuHtk4L3xQDg4bTOTIkBGwz/view?usp=sharing), and unzip them in `./npy/` folder, and run
+    Please download gt.npy from [GoogleDrive](https://drive.google.com/file/d/18T-qNvR_YGuHtk4L3xQDg4bTOTIkBGwz/view?usp=sharing) or [Baidu](https://pan.baidu.com/s/1P-w_NnwQJCffbr06mdvNFg)(code: v277), and unzip them in `./npy/` folder, and run
 ```
 python trainGMMOT.py
 ```
