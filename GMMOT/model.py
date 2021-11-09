@@ -89,10 +89,10 @@ class GMNet(nn.Module):
     def forward(self, tra, det,iou):
         feat_tra_all = []
         # feat_tra = self.reid_enc(tra.x)
-        for tra_i in range(len(tra.fnm[0])):
+        for tra_i in range(len(tra.fnm)):
             # print(tra.fnm[tra_i])
             # feat_tra0_o = F.normalize(tra.fnm[0][tra_i], p=2, dim=1)   
-            feat_tra0 = self.reid_enc(tra.fnm[0][tra_i])
+            feat_tra0 = self.reid_enc(tra.fnm[tra_i])
             tracklet_feat = feat_tra0.mean(0).unsqueeze(0)
             feat_tra_all.append(tracklet_feat)
 

@@ -97,6 +97,8 @@ python cross_validation.py
 python -m motmetrics.apps.eval_motchallenge ./MOT17/val ./result/val
 ```
 10. Training:
+
+    Please download gt.npy from [here](https://drive.google.com/file/d/18T-qNvR_YGuHtk4L3xQDg4bTOTIkBGwz/view?usp=sharing), and unzip them in `./npy/` folder, and run
 ```
 python trainGMMOT.py
 ```
