@@ -102,6 +102,10 @@ python -m motmetrics.apps.eval_motchallenge ./MOT17/val ./result/val
 ```
 python trainGMMOT.py
 ```
+11. Tracklet linear interpolation:
+```
+python linear_interpolation.py [--input_dir /path/to/onlinetrackeroutput] --output_dir /path/to/outputdir
+```
 ## Acknowledgement
 
 This implementation is mainly based on [deep_sort](https://github.com/nwojke/deep_sort) repo under GPL-3.0 License. Our ReID model is trained via [deep-person-reid](https://github.com/KaiyangZhou/deep-person-reid) repo. The codes in qpth folder are mainly from [qpth](https://github.com/locuslab/qpth).
