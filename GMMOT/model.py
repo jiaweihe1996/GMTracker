@@ -9,11 +9,8 @@ from utils.build_graphs import reshape_edge_feature
 from utils.voting_layer import Voting
 from GMMOT.config import cfg
 import gc
+def gh(n):
 
-
-def gh(P):
-
-    n = P.shape[0]
     A = np.ones((n, n)) - np.eye(n)
 
     edge_num = int(np.sum(A, axis=(0, 1)))
@@ -23,15 +20,20 @@ def gh(P):
 
     G = np.zeros((n_pad, edge_pad), dtype=np.float32)
     H = np.zeros((n_pad, edge_pad), dtype=np.float32)
+    start = np.zeros((n_pad, n_pad), dtype=np.float32)
+    end = np.zeros((n_pad, n_pad), dtype=np.float32)
     edge_idx = 0
     for i in range(n):
         for j in range(n):
+            start[i,j] = i
+            end[i,j] = j
             if A[i, j] == 1:
                 G[i, edge_idx] = 1
                 H[j, edge_idx] = 1
                 edge_idx += 1
 
-    return G, H, edge_num
+    return G, H, start,end
+
 def kronecker(A, B):
     AB = torch.einsum("ab,cd->acbd", A, B)
     AB = AB.view(A.size(0)*B.size(0), A.size(1)*B.size(1))
@@ -108,8 +110,12 @@ class GMNet(nn.Module):
         # print('data1',data1[0])
         # print('data2',data2[0])
         #print(data1.shape)
-        G1, H1, edge_num1 = gh(data1)
-        G2, H2, edge_num2 = gh(data2)
+        G1, H1, start_src, end_src = gh(data1.shape[0])
+        G2, H2, start_tgt, end_tgt = gh(data2.shape[0])
+        start_src = torch.tensor(start_src)
+        end_src = torch.tensor(end_src)
+        start_tgt = torch.tensor(start_tgt)
+        end_tgt = torch.tensor(end_tgt)
         G_src = torch.tensor(G1).unsqueeze(0)
         G_tgt = torch.tensor(G2).unsqueeze(0)
         H_src = torch.tensor(H1).unsqueeze(0)
@@ -139,39 +145,70 @@ class GMNet(nn.Module):
 
         emb1_new = F.normalize(emb1_new.squeeze(0), p=2, dim=1).unsqueeze(0)
         emb2_new = F.normalize(emb2_new.squeeze(0), p=2, dim=1).unsqueeze(0)
-        X2 = reshape_edge_feature(emb1_new.transpose(1, 2).cpu(), G_src, H_src)
-        Y2 = reshape_edge_feature(emb2_new.transpose(1, 2).cpu(), G_tgt, H_tgt)
 
-        Me = torch.matmul(X2.transpose(1, 2), Y2).squeeze(0)/2
-        # Mp = torch.matmul(U_src.transpose(1, 2), U_tgt).squeeze(0).detach()
         Mp = torch.matmul(emb1_new, emb2_new.transpose(1, 2)).squeeze(0)
-        # print(Mp.shape)
 
-        #print(Mp.shape)
-        a1 = Me.transpose(0, 1)
-        a2 = a1.reshape(Me.shape[0]*Me.shape[1])
-        K_G = kronecker(G_tgt.squeeze(0),G_src.squeeze(0)).detach()
-        #print(K_G.shape)
-        K1Me = a2*K_G
-        del K_G
-        del a2
-        del Me
-        gc.collect()
-        torch.cuda.empty_cache()
-        K_H = kronecker(H_tgt.squeeze(0),H_src.squeeze(0)).detach()
-        M = torch.mm(K1Me,K_H.t())
-        del K1Me
-        del K_H
-        gc.collect()
-        torch.cuda.empty_cache()
-        Mpp = Mp.transpose(0, 1).reshape(Mp.shape[0]*Mp.shape[1]).cuda()
-        M = M.unsqueeze(0).cuda()
+
+        kro_one_src = torch.ones(emb1_new.shape[1],emb1_new.shape[1])
+        kro_one_tgt = torch.ones(emb2_new.shape[1],emb2_new.shape[1])
+        mee1 = kronecker(kro_one_tgt,start_src).long()
+        mee2 = kronecker(kro_one_tgt,end_src).long()
+        mee3 = kronecker(start_tgt,kro_one_src).long()
+        mee4 = kronecker(end_tgt,kro_one_src).long()
+        src = torch.cat([emb1_new.squeeze(0).unsqueeze(1).repeat(1,emb1_new.shape[1],1),emb1_new.repeat(emb1_new.shape[1],1,1)],dim=2)
+        tgt = torch.cat([emb2_new.squeeze(0).unsqueeze(1).repeat(1,emb2_new.shape[1],1),emb2_new.repeat(emb2_new.shape[1],1,1)],dim=2)
+        src_tgt = (src.reshape(-1,1024)@tgt.reshape(-1,1024).t()).reshape(emb1_new.shape[1],emb1_new.shape[1],emb2_new.shape[1],emb2_new.shape[1])
+        mask = ((mee1-mee2).bool()&(mee3-mee4).bool()).float().cuda()
+        M = src_tgt[mee1,mee2,mee3,mee4]/2
+        M = mask*M
+        M = M.unsqueeze(0)
         k = (Mp.shape[0]-1)*(Mp.shape[1]-1)
-        #print(k)
         M[0] = k*torch.eye(M.shape[1],M.shape[2]).cuda() - M[0]
-        #print(M[0])
-        #M[0] = torch.cholesky(M[0])
         M = M.squeeze(0)
+        Mpp = Mp.transpose(0, 1).reshape(Mp.shape[0]*Mp.shape[1]).cuda()
+
+
+
+
+
+
+
+
+
+
+        # X2 = reshape_edge_feature(emb1_new.transpose(1, 2).cpu(), G_src, H_src)
+        # Y2 = reshape_edge_feature(emb2_new.transpose(1, 2).cpu(), G_tgt, H_tgt)
+
+        # Me = torch.matmul(X2.transpose(1, 2), Y2).squeeze(0)/2
+        # # Mp = torch.matmul(U_src.transpose(1, 2), U_tgt).squeeze(0).detach()
+        # Mp = torch.matmul(emb1_new, emb2_new.transpose(1, 2)).squeeze(0)
+        # # print(Mp.shape)
+
+        # #print(Mp.shape)
+        # a1 = Me.transpose(0, 1)
+        # a2 = a1.reshape(Me.shape[0]*Me.shape[1])
+        # K_G = kronecker(G_tgt.squeeze(0),G_src.squeeze(0)).detach()
+        # #print(K_G.shape)
+        # K1Me = a2*K_G
+        # del K_G
+        # del a2
+        # del Me
+        # gc.collect()
+        # torch.cuda.empty_cache()
+        # K_H = kronecker(H_tgt.squeeze(0),H_src.squeeze(0)).detach()
+        # M = torch.mm(K1Me,K_H.t())
+        # del K1Me
+        # del K_H
+        # gc.collect()
+        # torch.cuda.empty_cache()
+        # Mpp = Mp.transpose(0, 1).reshape(Mp.shape[0]*Mp.shape[1]).cuda()
+        # M = M.unsqueeze(0).cuda()
+        # k = (Mp.shape[0]-1)*(Mp.shape[1]-1)
+        # #print(k)
+        # M[0] = k*torch.eye(M.shape[1],M.shape[2]).cuda() - M[0]
+        # #print(M[0])
+        # #M[0] = torch.cholesky(M[0])
+        # M = M.squeeze(0)
 
         #cvxpy/expression 516 warning
         if Mp.shape[0] > Mp.shape[1]:

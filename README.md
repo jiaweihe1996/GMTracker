@@ -1,7 +1,7 @@
 
 
 # GMTracker
-
+##### [NOTE] This branch is an extended version of GMTacker. STILL IN DEVELOPMENT.
 This repository is the official PyTorch implementation of the CVPR 2021 paper: *Learnable Graph Matching: Incorporating Graph Partitioning with Deep Feature Learning for Multiple Object Tracking*.   
 [[arXiv](https://arxiv.org/abs/2103.16178)] [[CVF open access](https://openaccess.thecvf.com/content/CVPR2021/html/He_Learnable_Graph_Matching_Incorporating_Graph_Partitioning_With_Deep_Feature_Learning_CVPR_2021_paper.html)]
 
