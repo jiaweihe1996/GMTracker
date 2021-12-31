@@ -167,49 +167,6 @@ class GMNet(nn.Module):
         M = M.squeeze(0)
         Mpp = Mp.transpose(0, 1).reshape(Mp.shape[0]*Mp.shape[1]).cuda()
 
-
-
-
-
-
-
-
-
-
-        # X2 = reshape_edge_feature(emb1_new.transpose(1, 2).cpu(), G_src, H_src)
-        # Y2 = reshape_edge_feature(emb2_new.transpose(1, 2).cpu(), G_tgt, H_tgt)
-
-        # Me = torch.matmul(X2.transpose(1, 2), Y2).squeeze(0)/2
-        # # Mp = torch.matmul(U_src.transpose(1, 2), U_tgt).squeeze(0).detach()
-        # Mp = torch.matmul(emb1_new, emb2_new.transpose(1, 2)).squeeze(0)
-        # # print(Mp.shape)
-
-        # #print(Mp.shape)
-        # a1 = Me.transpose(0, 1)
-        # a2 = a1.reshape(Me.shape[0]*Me.shape[1])
-        # K_G = kronecker(G_tgt.squeeze(0),G_src.squeeze(0)).detach()
-        # #print(K_G.shape)
-        # K1Me = a2*K_G
-        # del K_G
-        # del a2
-        # del Me
-        # gc.collect()
-        # torch.cuda.empty_cache()
-        # K_H = kronecker(H_tgt.squeeze(0),H_src.squeeze(0)).detach()
-        # M = torch.mm(K1Me,K_H.t())
-        # del K1Me
-        # del K_H
-        # gc.collect()
-        # torch.cuda.empty_cache()
-        # Mpp = Mp.transpose(0, 1).reshape(Mp.shape[0]*Mp.shape[1]).cuda()
-        # M = M.unsqueeze(0).cuda()
-        # k = (Mp.shape[0]-1)*(Mp.shape[1]-1)
-        # #print(k)
-        # M[0] = k*torch.eye(M.shape[1],M.shape[2]).cuda() - M[0]
-        # #print(M[0])
-        # #M[0] = torch.cholesky(M[0])
-        # M = M.squeeze(0)
-
         #cvxpy/expression 516 warning
         if Mp.shape[0] > Mp.shape[1]:
             n, m, p = M.shape[0], Mp.shape[1], Mp.shape[0]
